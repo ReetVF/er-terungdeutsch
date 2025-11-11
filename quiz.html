@@ -1,0 +1,210 @@
+
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz – Politik</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <a class="brand" href="index.html">
+        <div class="logo">PL</div>
+        <div>
+          <div class="kicker">Quiz</div>
+          <h1>Teste dein Wissen</h1>
+        </div>
+      </a>
+      <a class="btn secondary" href="learn.html">Merkstoff ansehen</a>
+    </header>
+
+    <section class="card">
+      <div class="progress"><div id="bar"></div></div>
+      <div id="qwrap"></div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button id="prev" class="btn secondary">← Zurück</button>
+        <button id="next" class="btn">Weiter →</button>
+        <button id="finish" class="btn" style="display:none">Abgeben</button>
+      </div>
+      <div id="result" class="result" style="display:none"></div>
+    </section>
+
+    <footer>Viel Erfolg! 💪</footer>
+  </div>
+
+<script>
+// Fragenpool
+const QUESTIONS = [
+  // Demokratieformen
+  {q:"Welche Aussage beschreibt die parlamentarische Demokratie am besten?", opts:["Der Präsident ernennt die Regierung alleine.","Die Regierung geht aus dem vom Volk gewählten Parlament hervor.","Das Volk entscheidet über jedes einzelne Gesetz in Volksabstimmungen.","Es gibt keine Gewaltenteilung."], a:1, topic:"Demokratie"},
+  {q:"Ein Beispiel für eine präsidiale Demokratie ist …", opts:["Deutschland","Schweiz","USA","Österreich"], a:2, topic:"Demokratie"},
+  {q:"In der direkten Demokratie …", opts:["entscheidet ausschließlich das Parlament.","wählt das Volk den Bundespräsidenten direkt.","entscheidet das Volk unmittelbar über Sachfragen.","gibt es keine Parteien."], a:2, topic:"Demokratie"},
+
+  // Wahlgrundsätze
+  {q:"Welcher Wahlgrundsatz bedeutet, dass jede Stimme den gleichen Zählwert hat?", opts:["frei","gleich","geheim","unmittelbar"], a:1, topic:"Wahlen"},
+  {q:"'Unmittelbar' heißt: ", opts:["ohne Zwang wählen","direkte Wahl ohne Wahlmänner","Stimmabgabe bleibt verborgen","jeder darf wählen"], a:1, topic:"Wahlen"},
+  {q:"Welcher Grundsatz schützt die Wähler vor Druck und Beeinflussung?", opts:["frei","gleich","geheim","allgemein"], a:0, topic:"Wahlen"},
+  {q:"Welcher Grundsatz sichert die Privatsphäre bei der Stimmabgabe?", opts:["frei","gleich","geheim","unmittelbar"], a:2, topic:"Wahlen"},
+  {q:"'Allgemein' bedeutet:", opts:["Alle ab 16 dürfen wählen.","Nur Parteimitglieder dürfen wählen.","Alle Wahlberechtigten dürfen wählen.","Nur Steuerzahler dürfen wählen."], a:2, topic:"Wahlen"},
+
+  // Mehrheits-/Verhältniswahl
+  {q:"Bei der Mehrheitswahl im Wahlkreis …", opts:["bekommen alle Parteien Sitze entsprechend ihrem Stimmenanteil.","gewinnt der Kandidat mit den meisten Stimmen den Sitz.","müssen Stichwahlen immer stattfinden.","werden Sitze nur an Landeslisten vergeben."], a:1, topic:"Wahlen"},
+  {q:"Verhältniswahl bedeutet …", opts:["Sitze werden prozentual nach Parteistimmen verteilt.","Nur Direktmandate zählen.","Es gibt nur eine Stimme.","Es gibt immer Stichwahlen."], a:0, topic:"Wahlen"},
+
+  // Personalisiertes Verhältniswahlrecht
+  {q:"Wie heißt das Bundestagswahlsystem?", opts:["Mehrheitswahlrecht","Listenwahlrecht","Personalisiertes Verhältniswahlrecht","Reines Verhältniswahlrecht"], a:2, topic:"Bundestagswahl"},
+  {q:"Die Erststimme entscheidet …", opts:["über die Zusammensetzung des Bundestages nach Parteien.","über die Wahl einer Person im Wahlkreis (Direktmandat).","über die Bundeskanzlerin.","über die Größe des Bundestages."], a:1, topic:"Bundestagswahl"},
+  {q:"Die Zweitstimme …", opts:["ist weniger wichtig als die Erststimme.","wählt eine Partei und ist maßgeblich für die Sitzverteilung.","entscheidet über den Bundespräsidenten.","gilt nur bei Landtagswahlen."], a:1, topic:"Bundestagswahl"},
+  {q:"Was bewirkt die 5‑%‑Hürde?", opts:["Parteien unter 5% erhalten keinen Fraktionsstatus.","Parteien unter 5% ziehen in der Regel nicht in den Bundestag ein.","Parteien über 5% bekommen immer Überhangmandate.","Wahlkreissieger verlieren ihr Mandat."], a:1, topic:"Bundestagswahl"},
+  {q:"Was passiert bei der Sitzverteilung zuerst (vereinfacht)?", opts:["Anrechnung der Direktmandate.","Verteilung der Sitze nach Zweitstimmen auf Landeslisten.","Losverfahren.","Stichwahlen in allen Wahlkreisen."], a:1, topic:"Bundestagswahl"},
+
+  // Wahlreform 2023 (vereinfacht)
+  {q:"Welche Aussage zur Wahlreform 2023 trifft zu?", opts:["Der Bundestag hat nun exakt 736 Sitze.","Überhang- und Ausgleichsmandate entfallen, maßgeblich bleibt die Zweitstimme.","Direktmandate sind immer sicher, egal wie die Zweitstimmen ausfallen.","Die 5%-Hürde wurde abgeschafft."], a:1, topic:"Bundestagswahl"},
+  {q:"Maximalgröße des Bundestags nach Reform 2023 ist …", opts:["598","709","630","750"], a:2, topic:"Bundestagswahl"},
+
+  // Parteien – Definition/Funktionen
+  {q:"Was ist eine Partei?", opts:["Ein zeitlich befristeter Wahlverein.","Eine auf Dauer angelegte politische Organisation mit Programm.","Ein Wirtschaftsunternehmen.","Eine Bürgerinitiative ohne Mitglieder."], a:1, topic:"Parteien"},
+  {q:"Welche Funktion gehört NICHT zu Parteien?", opts:["Personalrekrutierung","Interessenartikulation","Programmfunktion","Steuererhebung"], a:3, topic:"Parteien"},
+  {q:"Interessenartikulation bedeutet …", opts:["Parteien suchen Kandidaten.","Bürger- und Gruppenanliegen werden gesammelt und in Politik übersetzt.","Parteien werben Mitglieder.","Parteien zählen die Stimmen aus."], a:1, topic:"Parteien"},
+  {q:"Partizipationsfunktion heißt …", opts:["Bürgern Wege eröffnen, politisch mitzuwirken.","Gesetze allein im Parlament beschließen.","Wahlkreise neu zuschneiden.","Stimmen auszählen."], a:0, topic:"Parteien"},
+  {q:"Legitimationsfunktion bedeutet …", opts:["Staatliche Entscheidungen transparent machen und Akzeptanz fördern.","Neue Steuern legitimieren.","Wahlbetrug verhindern.","Nur Parteimitglieder dürfen wählen."], a:0, topic:"Parteien"},
+
+  // Zusatz: Staatsstrukturprinzipien
+  {q:"Welches gehört zu den Staatsstrukturprinzipien des GG?", opts:["Monarchieprinzip","Sozialstaat","Feudalismus","Erbkaisertum"], a:1, topic:"Staatsprinzipien"},
+  {q:"Bundesstaat bedeutet …", opts:["Alle Macht liegt zentral beim Bund.","Kompetenzaufteilung zwischen Bund und Ländern.","Jede Gemeinde ist souverän.","Es gibt keinen Bundesrat."], a:1, topic:"Staatsprinzipien"},
+  {q:"Rechtsstaat meint u. a. …", opts:["Regierung ist nur dem Kanzler verpflichtet.","Bindung an Recht und Gesetz, Grundrechte, Gewaltenteilung.","Abschaffung unabhängiger Gerichte.","Geheime Gesetze."], a:1, topic:"Staatsprinzipien"},
+  {q:"Republik bedeutet …", opts:["Staatsoberhaupt ist gewählt und auf Zeit im Amt.","Staatsoberhaupt herrscht auf Lebenszeit und erbt das Amt.","Es gibt keinen Präsidenten.","Es gibt keine Wahlen."], a:0, topic:"Staatsprinzipien"},
+
+  // Mix / Transfer
+  {q:"Welche Stimme ist für die Sitzverteilung im Bundestag ausschlaggebend?", opts:["Erststimme","Zweitstimme","Drittstimme","Beides gleich"], a:1, topic:"Bundestagswahl"},
+  {q:"Wer wählt in Deutschland die Bundesregierung?", opts:["Das Volk direkt in einer Kanzlerwahl.","Der Bundespräsident alleine.","Die Mehrheit im Bundestag (indirekt durch Parlamentswahl).","Der Bundesrat."], a:2, topic:"Wahlen"},
+  {q:"Welche Aussage stimmt?", opts:["Bei Verhältniswahl erhält nur der Sieger den Sitz.","Bei Mehrheitswahl zählen die Parteistimmen prozentual.","Die Schweiz nutzt viele Elemente direkter Demokratie.","In Deutschland gibt es keine Wahlkreise."], a:2, topic:"Wahlen"},
+  {q:"Eine Hauptaufgabe von Parteien ist es, …", opts:["Gesetze zu sprechen.","Bürger in den politischen Prozess einzubinden.","Urteile zu fällen.","Wahlen zu organisieren."], a:1, topic:"Parteien"},
+  {q:"Die Erststimme wählt …", opts:["eine Landesliste","eine Person im Wahlkreis","den Bundespräsidenten","die Europäische Kommission"], a:1, topic:"Bundestagswahl"},
+  {q:"Die Zusammensetzung des Bundestages richtet sich vor allem nach …", opts:["den Direktmandaten","der Wahlbeteiligung","den Zweitstimmen","den Mitgliederzahlen der Parteien"], a:2, topic:"Bundestagswahl"},
+  {q:"Welche Funktion sorgt dafür, dass Bürger Anliegen überhaupt in der Politik ankommen?", opts:["Legitimationsfunktion","Interessenartikulation","Programmfunktion","Personalrekrutierung"], a:1, topic:"Parteien"},
+  {q:"Welche Aussage ist falsch?", opts:["Parteien bieten Mitmachmöglichkeiten.","Parteien wählen Richter ein.","Parteien entwickeln Programme.","Parteien stellen Kandidaten auf."], a:1, topic:"Parteien"},
+
+  // noch ein paar Kontrollfragen
+  {q:"Wahlen in Deutschland sind …", opts:["frei, gleich, geheim, unmittelbar, allgemein","frei, offen, geheim, mittelbar, eingeschränkt","gleich, öffentlich, geheim, mittelbar, allgemein","frei, gleich, offen, unmittelbar, allgemein"], a:0, topic:"Wahlen"},
+  {q:"Was beschreibt die Programmfunktion am ehesten?", opts:["Aufstellung des Haushalts","Formulierung politischer Ziele und Konzepte","Erhebung von Mitgliedsbeiträgen","Durchführung der Wahl"], a:1, topic:"Parteien"},
+];
+
+// Shuffle questions
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+const pool = shuffle([...QUESTIONS]);
+let idx=0;
+let answers = new Array(pool.length).fill(null);
+
+const qwrap = document.getElementById('qwrap');
+const bar = document.getElementById('bar');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+const finishBtn = document.getElementById('finish');
+const resultEl = document.getElementById('result');
+
+function render(){
+  const q = pool[idx];
+  bar.style.width = ((idx)/pool.length*100).toFixed(1)+'%';
+  qwrap.innerHTML = `
+    <div class="question">
+      <div class="badge">${idx+1} / ${pool.length} · Thema: ${q.topic}</div>
+      <h2 style="margin:.2rem 0 0">${q.q}</h2>
+      <div class="options">
+        ${q.opts.map((o,i)=>`
+          <label class="option ${ answers[idx]==null ? '' : (i===q.a?'correct': (answers[idx]===i?'wrong':'')) }">
+            <input type="radio" name="q${idx}" ${answers[idx]===i?'checked':''} value="${i}">
+            ${o}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  qwrap.querySelectorAll('input[type=radio]').forEach(r=>{
+    r.addEventListener('change', (e)=>{
+      answers[idx] = parseInt(e.target.value);
+      updateNav();
+    });
+  });
+  updateNav();
+}
+function updateNav(){
+  prevBtn.style.display = idx===0 ? 'none':'inline-flex';
+  const last = idx===pool.length-1;
+  nextBtn.style.display = last ? 'none':'inline-flex';
+  finishBtn.style.display = last ? 'inline-flex':'none';
+}
+
+prevBtn.onclick = ()=>{ idx=Math.max(0,idx-1); render(); }
+nextBtn.onclick = ()=>{ idx=Math.min(pool.length-1,idx+1); render(); }
+finishBtn.onclick = ()=>{
+  const answered = answers.filter(a=>a!==null).length;
+  if(answered<pool.length){
+    if(!confirm(`Du hast ${pool.length-answered} Frage(n) nicht beantwortet. Trotzdem abgeben?`)) return;
+  }
+  // Auswertung
+  let correct=0;
+  pool.forEach((q,i)=>{ if(answers[i]===q.a) correct++; });
+  const pct = Math.round(correct/pool.length*100);
+  const note = germanGrade(pct);
+  const text = gradeText(note);
+  bar.style.width = '100%';
+  resultEl.style.display='block';
+  resultEl.innerHTML = `
+    <h3>Ergebnis</h3>
+    <p><b>${correct}</b> von <b>${pool.length}</b> richtig – <b>${pct}%</b></p>
+    <p style="font-size:1.2rem">Note: <b>${note}</b> <span class="badge">${text}</span></p>
+    <details style="margin-top:10px">
+      <summary class="badge">Korrekturen anzeigen</summary>
+      <div style="margin-top:10px">${reviewHTML()}</div>
+    </details>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <a class="btn" href="quiz.html">🔁 Nochmal</a>
+      <a class="btn secondary" href="learn.html">📚 Nachlernen</a>
+    </div>
+  `;
+}
+
+function germanGrade(p){
+  // 1–6 nach Prozent
+  if(p>=92) return "1";
+  if(p>=81) return "2";
+  if(p>=67) return "3";
+  if(p>=50) return "4";
+  if(p>=30) return "5";
+  return "6";
+}
+function gradeText(n){
+  return {
+    "1":"sehr gut",
+    "2":"gut",
+    "3":"befriedigend",
+    "4":"ausreichend",
+    "5":"mangelhaft",
+    "6":"ungenügend"
+  }[n];
+}
+function reviewHTML(){
+  return pool.map((q,i)=>{
+    const ok = answers[i]===q.a;
+    return `<div class="card ${ok?'':'wrong'}" style="margin:8px 0; padding:12px">
+      <div class="badge">${i+1}. ${q.topic}</div>
+      <div><b>${q.q}</b></div>
+      <div class="small">Deine Antwort: ${answers[i]==null?'<i>keine</i>':q.opts[answers[i]]}</div>
+      <div class="small">Richtig: <b>${q.opts[q.a]}</b></div>
+    </div>`;
+  }).join('');
+}
+
+render();
+</script>
+</body>
+</html>
